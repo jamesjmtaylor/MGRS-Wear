@@ -17,10 +17,11 @@
         app:boxedEdges="all">
 
         <TextView
-            android:id="@+id/text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/hello_world"/>
+                android:id="@+id/locationTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/hello_world"
+                android:textAppearance="@android:style/TextAppearance.Material.Title"/>
 
     </FrameLayout>
 </android.support.wear.widget.BoxInsetLayout>
