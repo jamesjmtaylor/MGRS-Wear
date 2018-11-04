@@ -34,7 +34,7 @@ class MgrsActivity : WearableActivity() {
         locationTextView = findViewById(R.id.locationTextView)
         fusedLocationClient.lastLocation.addOnSuccessListener { location : Location? ->
             location?.latitude?.let { lat -> location.longitude.let { long ->
-                val locationText = "Location: $lat, $long"
+                val locationText = Coordinates.mgrsFromLatLon(lat,long)
                 locationTextView.text = locationText
             }}
         }
