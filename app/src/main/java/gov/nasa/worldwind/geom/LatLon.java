@@ -6,7 +6,7 @@
 package gov.nasa.worldwind.geom;
 
 
-import worldwind.util.WWMath;
+import gov.nasa.worldwind.util.WWMath;
 
 import java.util.*;
 

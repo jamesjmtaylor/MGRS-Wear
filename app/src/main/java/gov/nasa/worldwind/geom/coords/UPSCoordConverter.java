@@ -85,7 +85,7 @@
 
 package gov.nasa.worldwind.geom.coords;
 
-import worldwind.avlist.AVKey;
+import gov.nasa.worldwind.avlist.AVKey;
 
 /**
  * Ported to Java from the NGA GeoTrans ups.c and ups.h code - Feb 12, 2007 4:52:59 PM

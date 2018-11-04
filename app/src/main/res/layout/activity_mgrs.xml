@@ -10,18 +10,87 @@
     tools:context=".MgrsActivity"
     tools:deviceIds="wear">
 
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:padding="@dimen/inner_frame_layout_padding"
-        app:boxedEdges="all">
+    <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+        <android.support.constraint.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
 
-        <TextView
-                android:id="@+id/locationTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/hello_world"
-                android:textAppearance="@android:style/TextAppearance.Material.Title"/>
-
-    </FrameLayout>
+            <TextView
+                    android:id="@+id/locationTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="10T DR 00000 00000"
+                    android:textAppearance="@android:style/TextAppearance.Material.Title"
+                    android:layout_marginTop="8dp"
+                    app:layout_constraintTop_toBottomOf="@+id/latTextView" android:layout_marginStart="8dp"
+                    app:layout_constraintStart_toStartOf="parent" android:layout_marginEnd="8dp"
+                    app:layout_constraintEnd_toEndOf="parent" android:paddingLeft="8dp" android:paddingRight="8dp"/>
+            <TextView
+                    android:id="@+id/latLabelTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Latitude"
+                    android:textAppearance="@android:style/TextAppearance.Material.Medium"
+                    android:layout_marginTop="32dp"
+                    app:layout_constraintTop_toTopOf="parent"
+                    android:layout_marginEnd="8dp" app:layout_constraintEnd_toStartOf="@+id/guideline"/>
+            <TextView
+                    android:id="@+id/latTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0.0"
+                    android:textAppearance="@android:style/TextAppearance.Material.Medium"
+                    android:layout_marginTop="8dp"
+                    app:layout_constraintTop_toBottomOf="@+id/latLabelTextView"
+                    app:layout_constraintEnd_toEndOf="@+id/latLabelTextView" android:layout_marginStart="8dp"
+                    app:layout_constraintStart_toStartOf="parent" app:layout_constraintHorizontal_bias="1.0"/>
+            <TextView
+                    android:id="@+id/timeTextView"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="Last update:"
+                    android:textAppearance="@android:style/TextAppearance.Material.Medium"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:layout_marginEnd="8dp" app:layout_constraintStart_toStartOf="parent"
+                    android:layout_marginStart="8dp" android:layout_marginTop="8dp"
+                    app:layout_constraintTop_toBottomOf="@+id/locationTextView" android:textAlignment="center"/>
+            <TextView
+                    android:id="@+id/accuracyTextView"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="Accuracy:"
+                    android:textAppearance="@android:style/TextAppearance.Material.Medium"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:layout_marginEnd="8dp" app:layout_constraintStart_toStartOf="parent"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp" app:layout_constraintTop_toBottomOf="@+id/timeTextView"
+                    android:textAlignment="center"/>
+            <TextView
+                    android:id="@+id/longTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0.0"
+                    android:textAppearance="@android:style/TextAppearance.Material.Medium"
+                    app:layout_constraintStart_toStartOf="@+id/longLabelTextView"
+                    android:layout_marginTop="8dp"
+                    app:layout_constraintTop_toBottomOf="@+id/longLabelTextView" android:layout_marginEnd="8dp"
+                    app:layout_constraintEnd_toEndOf="parent" app:layout_constraintHorizontal_bias="0.0"/>
+            <TextView
+                    android:id="@+id/longLabelTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Longitude"
+                    android:textAppearance="@android:style/TextAppearance.Material.Medium"
+                    app:layout_constraintTop_toTopOf="@+id/latLabelTextView"
+                    app:layout_constraintStart_toEndOf="@+id/latLabelTextView" android:layout_marginStart="16dp"/>
+            <android.support.constraint.Guideline
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/guideline"
+                    android:orientation="vertical"
+                    app:layout_constraintGuide_percent="0.5"/>
+        </android.support.constraint.ConstraintLayout>
+    </ScrollView>
 </android.support.wear.widget.BoxInsetLayout>
