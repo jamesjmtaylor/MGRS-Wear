@@ -5,10 +5,12 @@ import android.app.AlertDialog
 import android.app.Application
 import android.content.DialogInterface
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.location.Location
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
+import android.support.wear.ambient.AmbientModeSupport
 import android.support.wearable.activity.WearableActivity
 import android.util.Log
 import android.widget.TextView
@@ -31,9 +33,12 @@ class MgrsActivity : WearableActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_mgrs)
+        setAmbientEnabled()
+//        ambientController = AmbientModeSupport.attach(this)
+
+
         checkLocationPermission()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-
 
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
         locationRequest.setInterval(20 * 1000)
@@ -43,17 +48,28 @@ class MgrsActivity : WearableActivity() {
         longTextView = findViewById(R.id.longTextView)
         accTextView = findViewById(R.id.accuracyTextView)
         timeTextView = findViewById(R.id.timeTextView)
-        fusedLocationClient.lastLocation.addOnSuccessListener { location : Location? ->
-            location?.let { loc ->
-                this.runOnUiThread {
-                    updateUi(loc)
-                }
+        fusedLocationClient.lastLocation.addOnSuccessListener { location : Location? -> location?.let { loc ->
+                this.runOnUiThread {updateUi(loc)}
             }
         }
-        fusedLocationClient.requestLocationUpdates(locationRequest, gpsCallback(WeakReference(this)), null)
+        fusedLocationClient.requestLocationUpdates(locationRequest, GpsCallback(WeakReference(this)), null)
+    }
+    override fun onEnterAmbient(ambientDetails: Bundle?) {
+        super.onEnterAmbient(ambientDetails)
+        locationTextView.paint.isAntiAlias = false
+        //TODO: Conserve as much batter as possible by turning unneccesary controls off & setting screen to black.
+    }
+    override fun onUpdateAmbient() {//Defaults to update the screen once per minute while in ambient mode
+        super.onUpdateAmbient()
+        //TODO: Make updates here.
+    }
+    override fun onExitAmbient() {
+        super.onExitAmbient()
+        locationTextView.paint.isAntiAlias = true
+        //TODO: Switch back to normal mode.
     }
 
-    private class gpsCallback(val activity: WeakReference<MgrsActivity>) : LocationCallback() {
+    private class GpsCallback(val activity: WeakReference<MgrsActivity>) : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult?) {
             locationResult?.let { result ->
                 for (location in result.locations) {
@@ -62,14 +78,13 @@ class MgrsActivity : WearableActivity() {
                 }}}
     }
 
-
     private fun updateUi(loc: Location) {
         this.runOnUiThread {
             latTextView.text = loc.latitude.toString()
             longTextView.text = loc.longitude.toString()
             locationTextView.text = Coordinates.mgrsFromLatLon(loc.latitude, loc.longitude)
             val timeText = "Last update: " + df.format(loc.time)
-            val accuracyText = "Accuracy: " + loc.accuracy.toString() + "m"
+            val accuracyText = "Accuracy: +/- " + loc.accuracy.toInt().toString() + "m"
             timeTextView.text = timeText
             accTextView.text = accuracyText
         }
