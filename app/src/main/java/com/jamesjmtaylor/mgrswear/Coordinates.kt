@@ -20,12 +20,7 @@ object Coordinates {
         val latitude = Angle.fromDegrees(lat)
         val longitude = Angle.fromDegrees(lon)
 
-        val utm = UTMCoord.fromLatLon(latitude, longitude)
-        val zone = utm.zone
-        val letter = utm
-        val easting = utm.easting.toInt()
-        val northing = utm.northing.toInt()
-        return "$zone $easting E $northing N"
+        return UTMCoord.fromLatLon(latitude, longitude).toString()
     }
 
     fun latLonFromMgrs(mgrs: String): DoubleArray {

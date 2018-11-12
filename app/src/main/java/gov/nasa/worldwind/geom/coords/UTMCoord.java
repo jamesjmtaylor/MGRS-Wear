@@ -5,6 +5,7 @@
  */
 package gov.nasa.worldwind.geom.coords;
 
+import android.support.annotation.NonNull;
 import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.geom.Angle;
 import gov.nasa.worldwind.geom.LatLon;
@@ -220,13 +221,12 @@ public class UTMCoord
         return this.northing;
     }
 
+    @NonNull
     public String toString()
     {
-        StringBuilder sb = new StringBuilder();
-        sb.append(zone);
-        sb.append(" ").append(AVKey.NORTH.equals(hemisphere) ? "N" : "S");
-        sb.append(" ").append(easting).append("E");
-        sb.append(" ").append(northing).append("N");
-        return sb.toString();
+        return String.valueOf(zone) +
+                " " + (AVKey.NORTH.equals(hemisphere) ? "N" : "S") +
+                " " + ((int) easting) + "E" +
+                " " + ((int) northing) + "N";
     }
 }
