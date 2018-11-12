@@ -11,8 +11,13 @@ import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.wear.ambient.AmbientModeSupport
+import android.support.wear.widget.BoxInsetLayout
 import android.support.wearable.activity.WearableActivity
 import android.util.Log
+import android.view.View
+import android.view.View.GONE
+import android.view.View.VISIBLE
+import android.widget.Button
 import android.widget.TextView
 import com.google.android.gms.location.*
 import java.lang.ref.WeakReference
@@ -22,74 +27,94 @@ import java.util.*
 class MgrsActivity : WearableActivity() {
     private val MY_PERMISSIONS_REQUEST_LOCATION = 99
     private lateinit var locationTextView: TextView
-    private lateinit var latTextView: TextView
-    private lateinit var longTextView: TextView
     private lateinit var accTextView: TextView
     private lateinit var timeTextView: TextView
+    private lateinit var formatButton: Button
+    private lateinit var backgroundView: BoxInsetLayout
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var locationRequest = LocationRequest.create()
-
-    private var df = SimpleDateFormat("yyyy-MM-dd HH:mmZ", Locale.US)
+    private var lastLocation : Location? = null
+    private var df = SimpleDateFormat("yyy" +
+            "y-MM-dd HH:mmZ", Locale.US)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_mgrs)
         setAmbientEnabled()
-//        ambientController = AmbientModeSupport.attach(this)
+
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+        locationRequest.setInterval(20 * 1000)
+        backgroundView = findViewById(R.id.backgroundView)
+        locationTextView = findViewById(R.id.locationTextView)
+        accTextView = findViewById(R.id.accuracyTextView)
+        timeTextView = findViewById(R.id.timeTextView)
+        formatButton = findViewById(R.id.formatButton)
+        formatButton.setOnClickListener(formatButtonOnClickListener(WeakReference(this)))
 
 
         checkLocationPermission()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-        locationRequest.setInterval(20 * 1000)
-
-        locationTextView = findViewById(R.id.locationTextView)
-        latTextView = findViewById(R.id.latTextView)
-        longTextView = findViewById(R.id.longTextView)
-        accTextView = findViewById(R.id.accuracyTextView)
-        timeTextView = findViewById(R.id.timeTextView)
-        fusedLocationClient.lastLocation.addOnSuccessListener { location : Location? -> location?.let { loc ->
-                this.runOnUiThread {updateUi(loc)}
-            }
-        }
         fusedLocationClient.requestLocationUpdates(locationRequest, GpsCallback(WeakReference(this)), null)
     }
+    enum class format { MGRS, UTM, LNGLAT }
+    var selectedFormat = format.MGRS
+    private class formatButtonOnClickListener(val activity: WeakReference<MgrsActivity>): View.OnClickListener {
+        override fun onClick(p0: View?) {
+            activity.get()?.let { a->
+                when (a.selectedFormat) {
+                    format.MGRS -> a.selectedFormat = format.UTM
+                    format.UTM -> a.selectedFormat = format.LNGLAT
+                    format.LNGLAT -> a.selectedFormat = format.MGRS
+                }
+                a.updateUi()
+            }
+        }
+    }
+
     override fun onEnterAmbient(ambientDetails: Bundle?) {
         super.onEnterAmbient(ambientDetails)
+        backgroundView.setBackgroundColor(Color.BLACK)
         locationTextView.paint.isAntiAlias = false
-        //TODO: Conserve as much batter as possible by turning unneccesary controls off & setting screen to black.
-    }
-    override fun onUpdateAmbient() {//Defaults to update the screen once per minute while in ambient mode
-        super.onUpdateAmbient()
-        //TODO: Make updates here.
-    }
+        timeTextView.setTextColor(Color.WHITE)
+        timeTextView.paint.isAntiAlias = false
+        accTextView.setTextColor(Color.WHITE)
+        accTextView.paint.isAntiAlias = false
+        formatButton.visibility = GONE
+     }
+
     override fun onExitAmbient() {
         super.onExitAmbient()
+        backgroundView.setBackgroundColor(Color.DKGRAY)
         locationTextView.paint.isAntiAlias = true
-        //TODO: Switch back to normal mode.
+        timeTextView.setTextColor(Color.LTGRAY)
+        timeTextView.paint.isAntiAlias = true
+        accTextView.setTextColor(Color.LTGRAY)
+        accTextView.paint.isAntiAlias = true
+        formatButton.visibility = VISIBLE
     }
 
     private class GpsCallback(val activity: WeakReference<MgrsActivity>) : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult?) {
-            locationResult?.let { result ->
-                for (location in result.locations) {
-                    activity.get()?.let { a -> location?.let { loc ->
-                        a.updateUi(loc) }}
-                }}}
+            locationResult?.let { result -> activity.get()?.let { a ->
+                a.lastLocation = result.lastLocation //Most recent location available in this result
+                a.updateUi()
+            }}}
     }
 
-    private fun updateUi(loc: Location) {
-        this.runOnUiThread {
-            latTextView.text = loc.latitude.toString()
-            longTextView.text = loc.longitude.toString()
-            locationTextView.text = Coordinates.mgrsFromLatLon(loc.latitude, loc.longitude)
+    private fun updateUi() {
+        lastLocation?.let { loc -> this.runOnUiThread {
+            val lat = loc.latitude; val long = loc.longitude
+            when (selectedFormat){
+                format.MGRS -> locationTextView.text = Coordinates.mgrsFromLatLon(lat, long)
+                format.UTM -> locationTextView.text = Coordinates.utmFromLatLon(lat,long)
+                format.LNGLAT -> { val latLong = "$lat, $long"; locationTextView.text = latLong}
+            }
             val timeText = "Last update: " + df.format(loc.time)
             val accuracyText = "Accuracy: +/- " + loc.accuracy.toInt().toString() + "m"
             timeTextView.text = timeText
             accTextView.text = accuracyText
-        }
+            formatButton.text = selectedFormat.name
+        }}
     }
-
     fun checkLocationPermission(): Boolean {
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION)
