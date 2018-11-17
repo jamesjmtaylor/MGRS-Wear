@@ -2,7 +2,6 @@ package com.jamesjmtaylor.mgrswear
 
 import android.Manifest
 import android.app.AlertDialog
-import android.app.Application
 import android.content.DialogInterface
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -10,10 +9,8 @@ import android.location.Location
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
-import android.support.wear.ambient.AmbientModeSupport
 import android.support.wear.widget.BoxInsetLayout
 import android.support.wearable.activity.WearableActivity
-import android.util.Log
 import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
@@ -43,7 +40,7 @@ class MgrsActivity : WearableActivity() {
 
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
         locationRequest.setInterval(20 * 1000)
-        backgroundView = findViewById(R.id.backgroundView)
+        backgroundView = findViewById(R.id.backgroundView) as BoxInsetLayout
         locationTextView = findViewById(R.id.locationTextView)
         accTextView = findViewById(R.id.accuracyTextView)
         timeTextView = findViewById(R.id.timeTextView)
@@ -55,15 +52,15 @@ class MgrsActivity : WearableActivity() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         fusedLocationClient.requestLocationUpdates(locationRequest, GpsCallback(WeakReference(this)), null)
     }
-    enum class format { MGRS, UTM, LNGLAT }
+    enum class format { MGRS, UTM, LATLONG }
     var selectedFormat = format.MGRS
     private class formatButtonOnClickListener(val activity: WeakReference<MgrsActivity>): View.OnClickListener {
         override fun onClick(p0: View?) {
             activity.get()?.let { a->
                 when (a.selectedFormat) {
                     format.MGRS -> a.selectedFormat = format.UTM
-                    format.UTM -> a.selectedFormat = format.LNGLAT
-                    format.LNGLAT -> a.selectedFormat = format.MGRS
+                    format.UTM -> a.selectedFormat = format.LATLONG
+                    format.LATLONG -> a.selectedFormat = format.MGRS
                 }
                 a.updateUi()
             }
@@ -106,7 +103,7 @@ class MgrsActivity : WearableActivity() {
             when (selectedFormat){
                 format.MGRS -> locationTextView.text = Coordinates.mgrsFromLatLon(lat, long)
                 format.UTM -> locationTextView.text = Coordinates.utmFromLatLon(lat,long)
-                format.LNGLAT -> { val latLong = "$lat, $long"; locationTextView.text = latLong}
+                format.LATLONG -> { val latLong = "$lat, $long"; locationTextView.text = latLong}
             }
             val timeText = "Last update: " + df.format(loc.time)
             val accuracyText = "Accuracy: +/- " + loc.accuracy.toInt().toString() + "m"
