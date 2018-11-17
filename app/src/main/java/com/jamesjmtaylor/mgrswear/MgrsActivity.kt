@@ -48,9 +48,10 @@ class MgrsActivity : WearableActivity() {
         formatButton.setOnClickListener(formatButtonOnClickListener(WeakReference(this)))
 
 
-        checkLocationPermission()
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        fusedLocationClient.requestLocationUpdates(locationRequest, GpsCallback(WeakReference(this)), null)
+        if (checkLocationPermission()) {
+            fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+            fusedLocationClient.requestLocationUpdates(locationRequest, GpsCallback(WeakReference(this)), null)
+        }
     }
     enum class format { MGRS, UTM, LATLONG }
     var selectedFormat = format.MGRS
@@ -140,5 +141,20 @@ class MgrsActivity : WearableActivity() {
             return true
         }
     }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (checkLocationPermission()){
+            fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+            fusedLocationClient.requestLocationUpdates(locationRequest, GpsCallback(WeakReference(this)), null)
+        } else { this.runOnUiThread {
+            locationTextView.text = getString(R.string.permission_error)
+            timeTextView.visibility = GONE
+            accTextView.visibility = GONE
+            formatButton.visibility = GONE
+        }}
+        return
+    }
 }
+
 private const val TAG = "MGRSactivity"

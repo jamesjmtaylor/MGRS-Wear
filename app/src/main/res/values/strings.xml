@@ -5,4 +5,5 @@
     values-round/strings.xml for round devices.
     -->
     <string name="hello_world">Hello Square World!</string>
+    <string name="permission_error">MGRS Wear cannot access location without permission</string>
 </resources>
