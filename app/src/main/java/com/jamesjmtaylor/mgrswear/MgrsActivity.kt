@@ -40,7 +40,7 @@ class MgrsActivity : WearableActivity() {
 
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
         locationRequest.setInterval(20 * 1000)
-        backgroundView = findViewById(R.id.backgroundView) as BoxInsetLayout
+        backgroundView = findViewById(R.id.backgroundView)
         locationTextView = findViewById(R.id.locationTextView)
         accTextView = findViewById(R.id.accuracyTextView)
         timeTextView = findViewById(R.id.timeTextView)
