@@ -4,4 +4,4 @@ This is an Android Wear watch app that displays your current position using the 
 
 ## Libraries
 
-* None yet.
+* WorldWind Java (NASA OPEN SOURCE AGREEMENT VERSION 1.3)
