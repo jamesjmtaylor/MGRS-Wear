@@ -7,21 +7,22 @@ import android.content.pm.PackageManager
 import android.graphics.Color
 import android.location.Location
 import android.os.Bundle
-import android.support.v4.app.ActivityCompat
-import android.support.v4.content.ContextCompat
-import android.support.wear.widget.BoxInsetLayout
-import android.support.wearable.activity.WearableActivity
 import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.Button
 import android.widget.TextView
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
+import androidx.wear.ambient.AmbientModeSupport
+import androidx.wear.widget.BoxInsetLayout
 import com.google.android.gms.location.*
 import java.lang.ref.WeakReference
 import java.text.SimpleDateFormat
 import java.util.*
 
-class MgrsActivity : WearableActivity() {
+class MgrsActivity : FragmentActivity(), AmbientModeSupport.AmbientCallbackProvider {
     private val MY_PERMISSIONS_REQUEST_LOCATION = 99
     private lateinit var locationTextView: TextView
     private lateinit var accTextView: TextView
@@ -29,17 +30,17 @@ class MgrsActivity : WearableActivity() {
     private lateinit var formatButton: Button
     private lateinit var backgroundView: BoxInsetLayout
     private lateinit var fusedLocationClient: FusedLocationProviderClient
-    private var locationRequest = LocationRequest.create()
-    private var lastLocation : Location? = null
+    private lateinit var locationRequest: LocationRequest
+    private var lastLocation: Location? = null
     private var df = SimpleDateFormat("yyy" +
             "y-MM-dd HH:mmZ", Locale.US)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_mgrs)
-        setAmbientEnabled()
-
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-        locationRequest.setInterval(20 * 1000)
+        AmbientModeSupport.attach(this)
+        val builder = LocationRequest.Builder(20 * 1000)
+        builder.setPriority(Priority.PRIORITY_HIGH_ACCURACY )
+        locationRequest = builder.build()
         backgroundView = findViewById(R.id.backgroundView)
         locationTextView = findViewById(R.id.locationTextView)
         accTextView = findViewById(R.id.accuracyTextView)
@@ -68,34 +69,13 @@ class MgrsActivity : WearableActivity() {
         }
     }
 
-    override fun onEnterAmbient(ambientDetails: Bundle?) {
-        super.onEnterAmbient(ambientDetails)
-        backgroundView.setBackgroundColor(Color.BLACK)
-        locationTextView.paint.isAntiAlias = false
-        timeTextView.setTextColor(Color.WHITE)
-        timeTextView.paint.isAntiAlias = false
-        accTextView.setTextColor(Color.WHITE)
-        accTextView.paint.isAntiAlias = false
-        formatButton.visibility = GONE
-     }
-
-    override fun onExitAmbient() {
-        super.onExitAmbient()
-        backgroundView.setBackgroundColor(Color.DKGRAY)
-        locationTextView.paint.isAntiAlias = true
-        timeTextView.setTextColor(Color.LTGRAY)
-        timeTextView.paint.isAntiAlias = true
-        accTextView.setTextColor(Color.LTGRAY)
-        accTextView.paint.isAntiAlias = true
-        formatButton.visibility = VISIBLE
-    }
-
     private class GpsCallback(val activity: WeakReference<MgrsActivity>) : LocationCallback() {
-        override fun onLocationResult(locationResult: LocationResult?) {
-            locationResult?.let { result -> activity.get()?.let { a ->
+        override fun onLocationResult(p0: LocationResult) {
+            p0.let { result -> activity.get()?.let { a ->
                 a.lastLocation = result.lastLocation //Most recent location available in this result
                 a.updateUi()
-            }}}
+            }}
+        }
     }
 
     private fun updateUi() {
@@ -154,6 +134,32 @@ class MgrsActivity : WearableActivity() {
             formatButton.visibility = GONE
         }}
         return
+    }
+
+    override fun getAmbientCallback(): AmbientModeSupport.AmbientCallback {
+        return object : AmbientModeSupport.AmbientCallback() {
+            override fun onEnterAmbient(ambientDetails: Bundle?) {
+                super.onEnterAmbient(ambientDetails)
+                backgroundView.setBackgroundColor(Color.BLACK)
+                locationTextView.paint.isAntiAlias = false
+                timeTextView.setTextColor(Color.WHITE)
+                timeTextView.paint.isAntiAlias = false
+                accTextView.setTextColor(Color.WHITE)
+                accTextView.paint.isAntiAlias = false
+                formatButton.visibility = GONE
+            }
+
+            override fun onExitAmbient() {
+                super.onExitAmbient()
+                backgroundView.setBackgroundColor(Color.DKGRAY)
+                locationTextView.paint.isAntiAlias = true
+                timeTextView.setTextColor(Color.LTGRAY)
+                timeTextView.paint.isAntiAlias = true
+                accTextView.setTextColor(Color.LTGRAY)
+                accTextView.paint.isAntiAlias = true
+                formatButton.visibility = VISIBLE
+            }
+        }
     }
 }
 

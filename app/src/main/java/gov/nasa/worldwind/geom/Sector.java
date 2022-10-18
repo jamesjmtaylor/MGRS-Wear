@@ -5,7 +5,7 @@
  */
 package gov.nasa.worldwind.geom;
 
-import android.support.constraint.solver.widgets.Rectangle;
+import androidx.constraintlayout.core.widgets.Rectangle;
 
 import java.util.*;
 import java.lang.Object;
