@@ -2,78 +2,85 @@ package com.jamesjmtaylor.mgrswear
 
 import android.Manifest
 import android.app.AlertDialog
-import android.content.DialogInterface
 import android.content.pm.PackageManager
-import android.graphics.Color
 import android.location.Location
 import android.os.Bundle
 import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.Button
+import android.widget.ScrollView
 import android.widget.TextView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
-import androidx.wear.ambient.AmbientModeSupport
-import androidx.wear.widget.BoxInsetLayout
-import com.google.android.gms.location.*
+import androidx.wear.ambient.AmbientLifecycleObserver
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import java.lang.ref.WeakReference
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Locale
 
-class MgrsActivity : FragmentActivity(), AmbientModeSupport.AmbientCallbackProvider {
-    private val MY_PERMISSIONS_REQUEST_LOCATION = 99
+class MgrsActivity : FragmentActivity() {
+    private val requestPermissionTag = 99
     private lateinit var locationTextView: TextView
     private lateinit var accTextView: TextView
     private lateinit var timeTextView: TextView
     private lateinit var formatButton: Button
-    private lateinit var backgroundView: BoxInsetLayout
+    private lateinit var scrollView: ScrollView
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationRequest: LocationRequest
     private var lastLocation: Location? = null
-    private var df = SimpleDateFormat("yyy" +
-            "y-MM-dd HH:mmZ", Locale.US)
+    private var df = SimpleDateFormat("yyyy-MM-dd HH:mmZ", Locale.US)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        lifecycle.addObserver(ambientObserver)
         setContentView(R.layout.activity_mgrs)
-        AmbientModeSupport.attach(this)
         val builder = LocationRequest.Builder(20 * 1000)
         builder.setPriority(Priority.PRIORITY_HIGH_ACCURACY )
         locationRequest = builder.build()
-        backgroundView = findViewById(R.id.backgroundView)
+        scrollView = findViewById(R.id.scrollView)
         locationTextView = findViewById(R.id.locationTextView)
         accTextView = findViewById(R.id.accuracyTextView)
         timeTextView = findViewById(R.id.timeTextView)
         formatButton = findViewById(R.id.formatButton)
-        formatButton.setOnClickListener(formatButtonOnClickListener(WeakReference(this)))
+        formatButton.setOnClickListener(FormatButtonOnClickListener(WeakReference(this)))
 
-
+        scrollView.requestFocus()
         if (checkLocationPermission()) {
             fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
             fusedLocationClient.requestLocationUpdates(locationRequest, GpsCallback(WeakReference(this)), null)
         }
     }
-    enum class format { MGRS, UTM, LATLONG }
-    var selectedFormat = format.MGRS
-    private class formatButtonOnClickListener(val activity: WeakReference<MgrsActivity>): View.OnClickListener {
+
+
+
+
+    enum class Format { MGRS, UTM, LATLONG }
+    var selectedFormat = Format.MGRS
+    private class FormatButtonOnClickListener(val activity: WeakReference<MgrsActivity>): View.OnClickListener {
         override fun onClick(p0: View?) {
             activity.get()?.let { a->
                 when (a.selectedFormat) {
-                    format.MGRS -> a.selectedFormat = format.UTM
-                    format.UTM -> a.selectedFormat = format.LATLONG
-                    format.LATLONG -> a.selectedFormat = format.MGRS
+                    Format.MGRS -> a.selectedFormat = Format.UTM
+                    Format.UTM -> a.selectedFormat = Format.LATLONG
+                    Format.LATLONG -> a.selectedFormat = Format.MGRS
                 }
                 a.updateUi()
             }
         }
     }
 
+
     private class GpsCallback(val activity: WeakReference<MgrsActivity>) : LocationCallback() {
-        override fun onLocationResult(p0: LocationResult) {
-            p0.let { result -> activity.get()?.let { a ->
-                a.lastLocation = result.lastLocation //Most recent location available in this result
-                a.updateUi()
+        override fun onLocationResult(locationResult: LocationResult) {
+            locationResult.let { result -> activity.get()?.let { mgrsActivity ->
+                mgrsActivity.lastLocation = result.lastLocation //Most recent location available in this result
+                mgrsActivity.updateUi()
             }}
         }
     }
@@ -82,9 +89,9 @@ class MgrsActivity : FragmentActivity(), AmbientModeSupport.AmbientCallbackProvi
         lastLocation?.let { loc -> this.runOnUiThread {
             val lat = loc.latitude; val long = loc.longitude
             when (selectedFormat){
-                format.MGRS -> locationTextView.text = Coordinates.mgrsFromLatLon(lat, long)
-                format.UTM -> locationTextView.text = Coordinates.utmFromLatLon(lat,long)
-                format.LATLONG -> { val latLong = "$lat, $long"; locationTextView.text = latLong}
+                Format.MGRS -> locationTextView.text = Coordinates.mgrsFromLatLon(lat, long)
+                Format.UTM -> locationTextView.text = Coordinates.utmFromLatLon(lat,long)
+                Format.LATLONG -> { val latLong = "$lat, $long"; locationTextView.text = latLong}
             }
             val timeText = "Last update: " + df.format(loc.time)
             val accuracyText = "Accuracy: +/- " + loc.accuracy.toInt().toString() + "m"
@@ -93,7 +100,7 @@ class MgrsActivity : FragmentActivity(), AmbientModeSupport.AmbientCallbackProvi
             formatButton.text = selectedFormat.name
         }}
     }
-    fun checkLocationPermission(): Boolean {
+    private fun checkLocationPermission(): Boolean {
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION)
             != PackageManager.PERMISSION_GRANTED) {
@@ -102,19 +109,20 @@ class MgrsActivity : FragmentActivity(), AmbientModeSupport.AmbientCallbackProvi
                 AlertDialog.Builder(this)
                     .setTitle("Location Permission")
                     .setMessage("MGRS Wear requires location permission")
-                    .setPositiveButton("OK", object : DialogInterface.OnClickListener {
-                        override fun onClick(dialog: DialogInterface?, which: Int) {
-                            //Prompt the user once explanation has been shown
-                            ActivityCompat.requestPermissions(this@MgrsActivity,
-                                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                                MY_PERMISSIONS_REQUEST_LOCATION)}
-                    })
+                    .setPositiveButton("OK"
+                    ) { _, _ -> //Prompt the user once explanation has been shown
+                        ActivityCompat.requestPermissions(
+                            this@MgrsActivity,
+                            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                            requestPermissionTag
+                        )
+                    }
                     .create()
                     .show()
-            } else {// No explanation needed, we can request the permission.
+            } else { // No explanation needed, we can request the permission.
                 ActivityCompat.requestPermissions(this,
                     arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                    MY_PERMISSIONS_REQUEST_LOCATION)
+                    requestPermissionTag)
             }
             return false
         } else {
@@ -136,31 +144,18 @@ class MgrsActivity : FragmentActivity(), AmbientModeSupport.AmbientCallbackProvi
         return
     }
 
-    override fun getAmbientCallback(): AmbientModeSupport.AmbientCallback {
-        return object : AmbientModeSupport.AmbientCallback() {
-            override fun onEnterAmbient(ambientDetails: Bundle?) {
-                super.onEnterAmbient(ambientDetails)
-                backgroundView.setBackgroundColor(Color.BLACK)
-                locationTextView.paint.isAntiAlias = false
-                timeTextView.setTextColor(Color.WHITE)
-                timeTextView.paint.isAntiAlias = false
-                accTextView.setTextColor(Color.WHITE)
-                accTextView.paint.isAntiAlias = false
-                formatButton.visibility = GONE
-            }
+    private val ambientCallback = object : AmbientLifecycleObserver.AmbientLifecycleCallback {
+        override fun onEnterAmbient(ambientDetails: AmbientLifecycleObserver.AmbientDetails) {
+            formatButton.visibility = GONE
+        }
 
-            override fun onExitAmbient() {
-                super.onExitAmbient()
-                backgroundView.setBackgroundColor(Color.DKGRAY)
-                locationTextView.paint.isAntiAlias = true
-                timeTextView.setTextColor(Color.LTGRAY)
-                timeTextView.paint.isAntiAlias = true
-                accTextView.setTextColor(Color.LTGRAY)
-                accTextView.paint.isAntiAlias = true
-                formatButton.visibility = VISIBLE
-            }
+        override fun onExitAmbient() {
+            formatButton.visibility = VISIBLE
+        }
+
+        override fun onUpdateAmbient() {
+            this@MgrsActivity.updateUi()
         }
     }
+    private val ambientObserver = AmbientLifecycleObserver(this, ambientCallback)
 }
-
-private const val TAG = "MGRSactivity"
