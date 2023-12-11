@@ -8,8 +8,8 @@ android {
         //noinspection OldTargetApi - Play Console fails with the error "You need to use an SDK with a version number of 33 or lower."
         targetSdkVersion 33
         compileSdk 34
-        versionCode 3
-        versionName "1.0.3"
+        versionCode 4
+        versionName "1.0.4"
     }
     android {
         compileOptions {
@@ -38,5 +38,6 @@ dependencies {
     implementation 'androidx.wear:wear:1.3.0'
     implementation 'com.google.android.gms:play-services-location:21.0.1'
     implementation 'androidx.constraintlayout:constraintlayout-core:1.0.4'
+    implementation "androidx.core:core-splashscreen:1.0.1"
     compileOnly 'com.google.android.wearable:wearable:2.9.0'
 }

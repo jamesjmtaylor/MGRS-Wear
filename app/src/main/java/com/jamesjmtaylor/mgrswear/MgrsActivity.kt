@@ -13,6 +13,7 @@ import android.widget.ScrollView
 import android.widget.TextView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.FragmentActivity
 import androidx.wear.ambient.AmbientLifecycleObserver
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -37,6 +38,7 @@ class MgrsActivity : FragmentActivity() {
     private var lastLocation: Location? = null
     private var df = SimpleDateFormat("yyyy-MM-dd HH:mmZ", Locale.US)
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         lifecycle.addObserver(ambientObserver)
         setContentView(R.layout.activity_mgrs)
