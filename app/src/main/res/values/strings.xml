@@ -6,4 +6,7 @@
     -->
     <string name="hello_world">Hello Square World!</string>
     <string name="permission_error">MGRS Wear cannot access location without permission</string>
+    <string name="last_update">Last update:</string>
+    <string name="accuracy">Accuracy:</string>
+    <string name="mgrs">MGRS</string>
 </resources>

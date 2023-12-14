@@ -8,8 +8,8 @@ android {
         //noinspection OldTargetApi - Play Console fails with the error "You need to use an SDK with a version number of 33 or lower."
         targetSdkVersion 33
         compileSdk 34
-        versionCode 4
-        versionName "1.0.4"
+        versionCode 7
+        versionName "1.0.7"
     }
     android {
         compileOptions {
