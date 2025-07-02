@@ -5,9 +5,9 @@ android {
     defaultConfig {
         applicationId "com.jamesjmtaylor.mgrswear"
         minSdkVersion 23
-        //noinspection OldTargetApi - Play Console fails with the error "You need to use an SDK with a version number of 33 or lower."
-        targetSdkVersion 33
-        compileSdk 34
+
+        targetSdkVersion 35
+        compileSdk 35
         versionCode 8
         versionName "1.0.8"
     }
